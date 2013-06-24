@@ -53,5 +53,4 @@ enum HospitalPart{
 	ICU,
 	CCU
 	
-	
-}
+}	

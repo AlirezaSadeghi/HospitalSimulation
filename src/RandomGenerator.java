@@ -55,7 +55,7 @@ public class RandomGenerator {
 	 */
 	public Part getPart() {
 		double t = nextRand();
-		if ( t < 0.4 )
+		if ( t < 0.4)
 			return Part.PUBLIC;
 		else if ( t < 0.9 )
 			return Part.SPECIALIST;

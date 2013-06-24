@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -5,28 +6,31 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class Hospital {
 
-	static int clock = 0;
-	String name;
-	LinkedBlockingDeque<Patient> patients;
-	RandomGenerator random;
-	HashMap<HospitalPart, Sector> sectors;
-	HashMap<HospitalPart, LinkedBlockingDeque<Patient>> doc_queues;
-	ArrayList<Patient> allPatients ;
-	int lamdas[] = { 0, 20, 20, 15, 15, 10, 15, 20, 2880, 2880, 2880 };
-	Max max ;
-	
-	
+	public static int clock = 0;
+
+	private String name;
+	private LinkedBlockingDeque<Patient> patients;
+	private RandomGenerator random;
+	private HashMap<HospitalPart, Sector> sectors;
+	private HashMap<HospitalPart, LinkedBlockingDeque<Patient>> doc_queues;
+	private ArrayList<Patient> allPatients;
+	private Max max;
+	private int docCount;
+	private int lamdas[] = { 0, 20, 20, 15, 15, 10, 15, 20, 2880, 2880, 2880 };
+
 	public Hospital(String name) {
+		Scanner sc = new Scanner(System.in);
+		System.out.println("تعداده دکترارو وارد کن");
+		this.docCount = sc.nextInt();
 		this.random = new RandomGenerator();
 		this.patients = new LinkedBlockingDeque<Patient>();
-		this.clock = 0;
 		this.name = name;
 		this.doc_queues = new HashMap<HospitalPart, LinkedBlockingDeque<Patient>>();
 		this.sectors = new HashMap<HospitalPart, Sector>();
 		int i = 0;
 		for (HospitalPart sp : HospitalPart.values()) {
 			this.doc_queues.put(sp, new LinkedBlockingDeque<Patient>());
-			this.sectors.put(sp, new Sector(sectors.size(), sp));
+			this.sectors.put(sp, new Sector(sectors.size(), sp, docCount));
 			this.sectors.get(sp).setLamda(lamdas[i]);
 			i++;
 		}
@@ -48,17 +52,20 @@ public class Hospital {
 
 	private void startSimulation(int time) {
 
-		while (this.clock < time) {
-			if ( patients.size() > 0 && this.clock == patients.peek().getEntranceTime()) {
+		while (clock < time) {
+			if (patients.size() > 0
+					&& clock == patients.peek().getEntranceTime()) {
 				ArrayList<Patient> new_patients = new ArrayList<>();
 
-				while ( patients.size() > 0 &&   patients.peek().getEntranceTime() == clock) {
-					
+				while (patients.size() > 0
+						&& patients.peek().getEntranceTime() == clock) {
+
 					new_patients.add(patients.poll());
-					allPatients.add(new_patients.get(new_patients.size()-1));
+					allPatients.add(new_patients.get(new_patients.size() - 1));
 					for (Patient patient : new_patients) {
-						
-						Hospital.log("umad too hospital", clock, patient, "khow Hospital", -10);
+
+						Hospital.log("umad too hospital", clock, patient,
+								"khow Hospital", -10);
 					}
 				}
 
@@ -86,17 +93,17 @@ public class Hospital {
 			handleSpecialistQueues();
 			handleUrganceQueue();
 		}
-		
+
 		this.finishing();
 		
 	}
 
-
 	private void doPublicStuff(Patient patient) {
-		LinkedBlockingDeque<Patient> q = doc_queues.get(HospitalPart.PUBLIC); 
-		log("enter " + "Public" + " Q", clock, patient, "Public", doc_queues.get(HospitalPart.PUBLIC).size());
+		LinkedBlockingDeque<Patient> q = doc_queues.get(HospitalPart.PUBLIC);
 		q.add(patient);
-		if ( q.size() > max.getMaxQ() ){
+		log("enter " + "Public" + " Q", clock, patient, "Public", doc_queues
+				.get(HospitalPart.PUBLIC).size());
+		if (q.size() > max.getMaxQ()) {
 			max.setMaxQ(q.size());
 			max.setHp(HospitalPart.PUBLIC);
 		}
@@ -109,30 +116,35 @@ public class Hospital {
 		Sector sec = sectors.get(hp);
 		LinkedBlockingDeque<Patient> q = doc_queues.get(hp);
 
-		if (sec.isBusy()) {
-			if (sec.getFinish_time() == clock) {
-				Patient p = sec.goOut("Public" , q.size());				
+		if (sec.hasBusyDoc()) {
+			int[] tmp = sec.getFinishTimes();
+			for (int i = 0; i < sec.getDocCount(); i++) {
+				if (tmp[i] == clock) {
+					Patient p = sec.goOut(i, "Public", q.size());
+				}
 			}
 		}
-
-
-		if ( !sec.isBusy() && q.size() > 0) {
+		if (!sec.isBusy() && q.size() > 0) {
 			Patient p = q.poll();
 
 			PublicWorkType part = random.getPublicWorkType();
+			int docId = 0;
 			switch (part) {
 			case PRESCRIBE:
-				Hospital.log("biya tooo Public" , clock, p, hp.toString(), q.size());
-				sec.setPatient(p);
-				sec.setFinish_time(15 + clock);
+				Hospital.log("biya tooo Public", clock, p, hp.toString(),
+						q.size());
+				docId = sec.setPatient(p);
+				sec.setFinish_time(15 + clock, docId);
 				break;
 			case HOSPTILIZE:
-				Hospital.log("biya tooo Public" , clock, p, hp.toString(), q.size());
-				sec.setPatient(p);
-				sec.setFinish_time(25 + clock);
+				Hospital.log("biya tooo Public", clock, p, hp.toString(),
+						q.size());
+				docId = sec.setPatient(p);
+				sec.setFinish_time(25 + clock, docId);
 				break;
 			case REFER:
-				Hospital.log("biya tooo Public" , clock, p, hp.toString(), q.size());
+				Hospital.log("biya tooo Public", clock, p, hp.toString(),
+						q.size());
 				doSpecialistStuff(p);
 				break;
 
@@ -142,17 +154,16 @@ public class Hospital {
 		}
 	}
 
-	
 	private void doSpecialistStuff(Patient patient) {
 		HospitalPart part = random.getSpecialist();
-		LinkedBlockingDeque<Patient> q = doc_queues.get(part); 
+		LinkedBlockingDeque<Patient> q = doc_queues.get(part);
 		q.add(patient);
 		log("enter " + part + " Q", clock, patient, part.toString(), q.size());
-		if ( q.size() > max.getMaxQ() ){
+		if (q.size() > max.getMaxQ()) {
 			max.setMaxQ(q.size());
 			max.setHp(part);
 		}
-		
+
 		handleSpecialistQueues();
 
 	}
@@ -162,38 +173,43 @@ public class Hospital {
 			HospitalPart hp = HospitalPart.values()[i];
 			Sector sec = sectors.get(hp);
 			LinkedBlockingDeque<Patient> q = doc_queues.get(hp);
-			
-			if (sec.isBusy()) {
-				if (sec.getFinish_time() == clock) {
-					Patient patientOut = sec.goOut(hp.toString() , q.size() );
-//					System.out.println(q.size());
-					if ( q.size() >  0 ){
-//						for (Patient patient : q) {
-//							System.out.println("@@@@@@@@@@@@@");
-//							System.out.println(patient.getPatientId());
-//							if ( sec.isBusy() )
-//								System.out.println("WtF ?!");
-//						}
-					}
-					
-					SpecialistWorkType workType = random
-							.getSpecialistWorkType();
-					if (workType == SpecialistWorkType.HOSPITALIZE) {
-//						HospitalPart hp2 = random.getHospitalizeRoom();
-						doUrganceStuff(patientOut);
-//						doc_queues.get(hp2).add(patientOut);
+
+			if (sec.hasBusyDoc()) {
+				int[] tmp = sec.getFinishTimes();
+				for (int j = 0; j < sec.getDocCount(); j++) {
+					if (tmp[j] == clock) {
+						Patient patientOut = sec.goOut(j, hp.toString(),
+								q.size());
+						// System.out.println(q.size());
+						if (q.size() > 0) {
+							// for (Patient patient : q) {
+							// System.out.println("@@@@@@@@@@@@@");
+							// System.out.println(patient.getPatientId());
+							// if ( sec.isBusy() )
+							// System.out.println("WtF ?!");
+							// }
+						}
+
+						SpecialistWorkType workType = random
+								.getSpecialistWorkType();
+						if (workType == SpecialistWorkType.HOSPITALIZE) {
+							// HospitalPart hp2 = random.getHospitalizeRoom();
+							doUrganceStuff(patientOut);
+							// doc_queues.get(hp2).add(patientOut);
+						}
 					}
 				}
 			}
-
+//			System.out.println("HERE::   " + sec.isBusy() + " " + q.size());
 			if (q.size() > 0 && !sec.isBusy()) {
 				Patient p = q.poll();
-				sec.setPatient(p);
+				int docId = sec.setPatient(p);
 				// TODO expo
-				// sec.setFinish_time((int)Distributions.ExponentialRandomNumber(sec.lamda)
+				 sec.setFinish_time((int)Distributions.ExponentialRandomNumber(sec.lamda ), docId);
 				// + clock);
-				sec.setFinish_time(10 + clock);
-				Hospital.log("biya tooo " + hp, clock, p, hp.toString(), q.size());
+//				sec.setFinish_time(10 + clock, docId);
+				Hospital.log("biya tooo " + hp, clock, p, hp.toString(),
+						q.size());
 
 			}
 		}
@@ -201,16 +217,17 @@ public class Hospital {
 
 	private void doUrganceStuff(Patient patient) {
 		HospitalPart part = random.getHospitalizeRoom();
-		LinkedBlockingDeque<Patient> q = doc_queues.get(part); 
+		LinkedBlockingDeque<Patient> q = doc_queues.get(part);
 		q.add(patient);
 		patient.setHospitalized(true);
-		log("enter " + part + " Q", clock, patient, part.toString(), doc_queues.get(part).size());
-		
-		if ( q.size() > max.getMaxQ() ){
+		log("enter " + part + " Q", clock, patient, part.toString(), doc_queues
+				.get(part).size());
+
+		if (q.size() > max.getMaxQ()) {
 			max.setMaxQ(q.size());
 			max.setHp(part);
 		}
-		
+
 		handleUrganceQueue();
 	}
 
@@ -219,25 +236,27 @@ public class Hospital {
 			HospitalPart hp = HospitalPart.values()[i];
 			Sector sec = sectors.get(hp);
 			LinkedBlockingDeque<Patient> q = doc_queues.get(hp);
-			
-			if (sec.isBusy()) {
-				if (sec.getFinish_time() == clock) {
-					Patient patientOut = sec.goOut("Urgance", q.size());
-				}
+
+			if (sec.hasBusyDoc()) {
+				int[] tmp = sec.getFinishTimes();
+				for (int j = 0; j < sec.getDocCount(); j++)
+					if (tmp[j] == clock) {
+						Patient patientOut = sec.goOut(j, "Urgance", q.size());
+					}
 			}
 
 			if (q.size() > 0 && !sec.isBusy()) {
 				Patient p = q.poll();
-				sec.setPatient(p);
+				int docId = sec.setPatient(p);
 				// TODO expo
-				// sec.setFinish_time((int)Distributions.ExponentialRandomNumber(sec.lamda)
+				 sec.setFinish_time((int)Distributions.ExponentialRandomNumber(sec.lamda), docId);
 				// + clock);
-				sec.setFinish_time(30 + clock);
-				Hospital.log("biya tooo " + hp, clock, p, hp.toString(), q.size());
+//				sec.setFinish_time(30 + clock, docId);
+				Hospital.log("biya tooo " + hp, clock, p, hp.toString(),
+						q.size());
 			}
 		}
 	}
-
 
 	private void initPatients(int totalTime) {
 		int time = 0;
@@ -263,46 +282,51 @@ public class Hospital {
 	 * Change To Poisson
 	 */
 	private double generateNextCustomerEntranceInterval() {
-		// return Distributions.PoissonRandomNumber(200/24*600);
+//		 return Distributions.PoissonRandomNumber(200/(24*60));
 		return Distributions.UniformRandomNumber();
 	}
 
-	static public void log(String event, int clock, Patient p , String qName , int qSize) {
+	static public void log(String event, int clock, Patient p, String qName,
+			int qSize) {
 		System.out.println(String.format("%-12s", clock)
 				+ String.format("%-30s", event)
 				+ String.format("%-5s", p.getPatientId())
 				+ String.format("%-30s", qName)
 				+ String.format("%-30s", Integer.toString(qSize)));
-				
+
 	}
-	
-	private double average(){
-		double sum = 0 , number = 0 ; 
+
+	private double average() {
+		double sum = 0, number = 0;
 		for (Patient p : this.allPatients) {
-			if(!p.isHospitalized()){
+			if (!p.isHospitalized()) {
 				sum += p.getTotalTime();
 				number++;
 			}
 		}
-		return sum/number;
+		return sum / number;
 	}
-	
-	private double variance(){
+
+	private double variance() {
 		double ave = average();
-		double var = 0 , sum = 0 , number = 0 ; 
+		double var = 0, sum = 0, number = 0;
 		for (Patient p : this.allPatients) {
-			if(!p.isHospitalized()){
+			if (!p.isHospitalized()) {
 				sum += Math.pow(ave - p.getTotalTime(), 2.0);
 				number++;
 			}
 		}
-		
-		var = sum /number;
+
+		var = sum / number;
 		return var;
 	}
 
 	private void finishing() {
-		System.out.println("Max Q was for " + max.getHp().toString() + " section with " + max.getMaxQ());
-		System.out.println("Ave for patients is " + average() + " var is " + variance());
+		System.out.println("Max Q was for " + max.getHp().toString()
+				+ " section with " + max.getMaxQ());
+		System.out.println("Ave for patients is " + average() + " var is "
+				+ variance());
+		
+		System.out.println(allPatients.size());
 	}
 }
