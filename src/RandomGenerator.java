@@ -17,22 +17,22 @@ public class RandomGenerator {
 	 * kodom motekhases bayad tane lashesho bebare 
 	 * @return
 	 */
-	public Speciality getSpecialist(){
+	public HospitalPart getSpecialist(){
 		double t = nextRand();
 		if ( t < 0.15 )
-			return Speciality.CARDIO;
+			return HospitalPart.CARDIO;
 		else if ( t < 0.3 )
-			return Speciality.NEURO;
+			return HospitalPart.NEURO;
 		else if ( t < 0.5 )
-			return Speciality.INTERNAL;
+			return HospitalPart.INTERNAL;
 		else if ( t < 0.63 )
-			return Speciality.ORTHOPED;
+			return HospitalPart.ORTHOPED;
 		else if ( t < 0.75 )
-			return Speciality.BREAK_FXIER;
+			return HospitalPart.BREAK_FXIER;
 		else if ( t < 0.88 )
-			return Speciality.EAR_MOUTH_NOSE;
+			return HospitalPart.EAR_MOUTH_NOSE;
 		else 
-			return Speciality.OPTOMETER;
+			return HospitalPart.OPTOMETER;
 	}
 	
 	/**
@@ -79,14 +79,14 @@ public class RandomGenerator {
 	 * too bimarestan chetori bastari mishe , otagh amal , ICU ya CCU 
 	 * @return
 	 */
-	HospitalizeRoom getHospitalizeRoom() {
+	HospitalPart getHospitalizeRoom() {
 		double t = nextRand();
 		if ( t < 0.5 )
-			return HospitalizeRoom.SURGERY;
+			return HospitalPart.SURGERY;
 		else if ( t < 0.75 )
-			return HospitalizeRoom.ICU;
+			return HospitalPart.ICU;
 		else 
-			return HospitalizeRoom.CCU;
+			return HospitalPart.CCU;
 	}
 	
 }
