@@ -5,15 +5,15 @@ enum Part {
 }
 
 
-enum Speciality {
-	CARDIO,
-	NEURO,
-	INTERNAL,
-	ORTHOPED,
-	BREAK_FXIER,
-	EAR_MOUTH_NOSE,
-	OPTOMETER
-}
+//enum Speciality {
+//	CARDIO,
+//	NEURO,
+//	INTERNAL,
+//	ORTHOPED,
+//	BREAK_FXIER,
+//	EAR_MOUTH_NOSE,
+//	OPTOMETER
+//}
 
 
 
@@ -31,9 +31,27 @@ enum SpecialistWorkType {
 }
 
 
+//
+//enum HospitalizeRoom {
+//	SURGERY,
+//	ICU,
+//	CCU
+//}
 
-enum HospitalizeRoom {
+enum HospitalPart{
+	PUBLIC,
+	
+	CARDIO,
+	NEURO,
+	INTERNAL,
+	ORTHOPED,
+	BREAK_FXIER,
+	EAR_MOUTH_NOSE,
+	OPTOMETER,
+	
 	SURGERY,
 	ICU,
 	CCU
+	
+	
 }
