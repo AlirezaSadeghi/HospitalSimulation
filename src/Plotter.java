@@ -4,14 +4,17 @@ import java.awt.geom.*;
 import javax.swing.*;
  
 public class Plotter extends JPanel {
-    int[] data = {
-        21, 14, 18, 03, 86, 88, 74, 87, 54, 77,
-        61, 55, 48, 60, 49, 36, 38, 27, 20, 18
-    };
+    int[] data;
+    
+    public void setData(int [] data){
+    	this.data = data;
+    	this.repaint();
+    }
     final int PAD = 20;
  
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        this.setBackground(new Color(255, 255, 100));
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
@@ -27,7 +30,7 @@ public class Plotter extends JPanel {
         LineMetrics lm = font.getLineMetrics("0", frc);
         float sh = lm.getAscent() + lm.getDescent();
         // Ordinate label.
-        String s = "data";
+        String s = "داده ها";
         float sy = PAD + ((h - 2*PAD) - s.length()*sh)/2 + lm.getAscent();
         for(int i = 0; i < s.length(); i++) {
             String letter = String.valueOf(s.charAt(i));
@@ -36,8 +39,8 @@ public class Plotter extends JPanel {
             g2.drawString(letter, sx, sy);
             sy += sh;
         }
-        // Abcissa label.
-        s = "x axis";
+        
+        s = "pub|card|neu|inter|ortho|break|emn|opto|surg|icu|ccu";
         sy = h - PAD + (PAD - sh)/2 + lm.getAscent();
         float sw = (float)font.getStringBounds(s, frc).getWidth();
         float sx = (w - sw)/2;
@@ -59,6 +62,8 @@ public class Plotter extends JPanel {
             double x = PAD + i*xInc;
             double y = h - PAD - scale*data[i];
             g2.fill(new Ellipse2D.Double(x-2, y-2, 4, 4));
+            char [] rep = String.valueOf(data[i]).toCharArray();
+            g2.drawChars(rep, 0, rep.length, (int)(x-2), (int)(y-2));
         }
     }
  
@@ -69,14 +74,5 @@ public class Plotter extends JPanel {
                 max = data[i];
         }
         return max;
-    }
- 
-    public static void main(String[] args) {
-        JFrame f = new JFrame();
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new Plotter());
-        f.setSize(400,400);
-        f.setLocation(200,200);
-        f.setVisible(true);
     }
 }

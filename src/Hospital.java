@@ -1,8 +1,11 @@
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import javax.swing.JFrame;
 
 public class Hospital {
 
@@ -15,10 +18,21 @@ public class Hospital {
 	private HashMap<HospitalPart, LinkedBlockingDeque<Patient>> doc_queues;
 	private ArrayList<Patient> allPatients;
 	private Max max;
+	Plotter plotter;
 	private int docCount;
 	private int lamdas[] = { 0, 20, 20, 15, 15, 10, 15, 20, 2880, 2880, 2880 };
 
 	public Hospital(String name) {
+		JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.plotter = new Plotter();
+        f.add(plotter);
+        f.setSize(400,400);
+        f.setLocation(1200,500);
+        f.setVisible(true);
+        
+        this.plotter.setData(new int [11]);
+		
 		Scanner sc = new Scanner(System.in);
 		System.out.println("تعداده دکترارو وارد کن");
 		this.docCount = sc.nextInt();
@@ -88,16 +102,31 @@ public class Hospital {
 					}
 				}
 			}
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			clock++;
 			handlePublicQueue();
 			handleSpecialistQueues();
 			handleUrganceQueue();
+			updateGUI();
 		}
 
 		this.finishing();
-		
 	}
 
+	
+	private void updateGUI(){
+		int [] data = new int [11];
+		
+		for(int i = 0; i<11; i++)
+			data[i] = this.doc_queues.get(HospitalPart.values()[i]).size();
+		
+		this.plotter.setData(data);
+	}
+	
 	private void doPublicStuff(Patient patient) {
 		LinkedBlockingDeque<Patient> q = doc_queues.get(HospitalPart.PUBLIC);
 		q.add(patient);
